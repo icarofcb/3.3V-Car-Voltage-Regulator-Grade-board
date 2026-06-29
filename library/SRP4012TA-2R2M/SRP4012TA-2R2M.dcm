@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP SRP4012TA-2R2M
+D SMD Inductor
+K
+F http://www.bourns.com/docs/Product-Datasheets/SRP4012TA.pdf
+$ENDCMP
+#
+#End Doc Library

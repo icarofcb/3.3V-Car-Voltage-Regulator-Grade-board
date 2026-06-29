@@ -1,0 +1,28 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#SamacSys ECAD Model TPS25200DRVR
+#/754407/987822/2.50/7/3/Integrated Circuit
+DEF TPS25200DRVR IC 0 30 Y Y 1 F N
+F0 "IC" 1050 300 50 H V L CNN
+F1 "TPS25200DRVR" 1050 200 50 H V L CNN
+F2 "SON65P200X200X80-7N" 1050 100 50 H I L CNN
+F3 "http://www.ti.com/general/docs/suppproductinfo.tsp?distId=10&gotoUrl=http%3A%2F%2Fwww.ti.com%2Flit%2Fgpn%2Ftps25200" 1050 0 50 H I L CNN
+F4 "6.5 V/2.8 A eFuse with Overvoltage Clamp" 1050 -100 50 H I L CNN "Description"
+F5 "0.8" 1050 -200 50 H I L CNN "Height"
+F6 "595-TPS25200DRVR" 1050 -300 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.co.uk/ProductDetail/Texas-Instruments/TPS25200DRVR?qs=p08Uhw9w2FzQJ8NfE3%252BFYg%3D%3D" 1050 -400 50 H I L CNN "Mouser Price/Stock"
+F8 "Texas Instruments" 1050 -500 50 H I L CNN "Manufacturer_Name"
+F9 "TPS25200DRVR" 1050 -600 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+X OUT 1 0 0 200 R 50 50 0 0 P
+X ILIM 2 0 -100 200 R 50 50 0 0 P
+X ~FAULT 3 0 -200 200 R 50 50 0 0 P
+X EP 7 600 -700 200 U 50 50 0 0 P
+X IN 6 1200 0 200 L 50 50 0 0 P
+X GND 5 1200 -100 200 L 50 50 0 0 P
+X EN 4 1200 -200 200 L 50 50 0 0 P
+P 5 0 1 6 200 100 1000 100 1000 -500 200 -500 200 100 N
+ENDDRAW
+ENDDEF
+#
+#End Library

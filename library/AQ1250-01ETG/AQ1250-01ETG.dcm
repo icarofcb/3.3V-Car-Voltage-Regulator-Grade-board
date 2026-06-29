@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP AQ1250-01ETG
+D ESD Suppressors / TVS Diodes 5V 50A 30kV SOD882 Uni-dir TVS
+K
+F https://www.littelfuse.com/~/media/electronics/datasheets/tvs_diode_arrays/littelfuse_tvs_diode_array_aq1250-01etg_datasheet.pdf.pdf
+$ENDCMP
+#
+#End Doc Library

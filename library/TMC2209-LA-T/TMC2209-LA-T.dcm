@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP TMC2209-LA-T
+D Bipolar Motor Driver Power MOSFET Step/Direction, UART 28-QFN (5x5)
+K
+F https://www.analog.com/media/en/technical-documentation/data-sheets/TMC2209_datasheet_rev1.09.pdf
+$ENDCMP
+#
+#End Doc Library

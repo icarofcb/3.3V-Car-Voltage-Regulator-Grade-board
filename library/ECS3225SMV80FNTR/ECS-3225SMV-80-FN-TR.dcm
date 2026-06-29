@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ECS-3225SMV-80-FN-TR
+D Standard Clock Oscillators 8.000 MHz ECS-3225SMV Multi-Volt 1.62 - 3.63 V +/-10ppm -40 - +85C 4-SMD 3.2 x 2.5 mm RoHS
+K
+F https://ecsxtal.com/store/pdf/ECS-3225SMV.pdf
+$ENDCMP
+#
+#End Doc Library

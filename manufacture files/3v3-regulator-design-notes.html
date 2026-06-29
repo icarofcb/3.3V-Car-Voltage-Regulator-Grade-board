@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3V3-REGULATOR — Design Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FCFCFA; --ink:#1A1C20; --ink-soft:#4A5159;
+    --rule:#D8D5CC; --rule-soft:#E7E4DB;
+    --copper:#B26A33; --copper-deep:#8A4F22;
+    --steel:#37485A;
+    --ok:#2F7D54; --ok-bg:#E7F1EA;
+    --warn:#9C7414; --warn-bg:#F6EFD9;
+    --fault:#BE3A2B;
+    --panel:#F3F2ED; --mono-bg:#EEEDE6;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --disp:"Space Grotesk",var(--sans);
+    --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .doc{max-width:880px; margin:0 auto; padding:0 28px 96px}
+
+  /* ---------- hero / title block ---------- */
+  header.hero{padding:56px 0 28px}
+  .kicker{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.28em;
+    text-transform:uppercase; color:var(--copper); font-weight:500;
+  }
+  h1.title{
+    font-family:var(--disp); font-weight:700; letter-spacing:-.01em;
+    font-size:clamp(34px,7vw,58px); line-height:1.02; margin:.28em 0 .18em;
+  }
+  .subtitle{font-size:17px; color:var(--ink-soft); max-width:46ch; margin:0}
+  .subtitle b{color:var(--ink); font-weight:600}
+
+  /* headline parameter bar — datasheet front page */
+  .params{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:0;
+    border:1px solid var(--ink); margin:30px 0 0; background:var(--paper);
+  }
+  .params .p{padding:14px 14px 12px; border-right:1px solid var(--rule)}
+  .params .p:last-child{border-right:0}
+  .params .pl{font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--ink-soft)}
+  .params .pv{font-family:var(--disp); font-weight:600; font-size:20px; margin-top:3px; line-height:1.1}
+  .params .pv small{font-size:12px; color:var(--ink-soft); font-weight:500}
+
+  /* kicad-style title block grid */
+  .titleblock{
+    margin-top:18px; border:1px solid var(--ink); font-family:var(--mono);
+    font-size:12px; display:grid; grid-template-columns:2.2fr 1fr 1fr 1fr;
+  }
+  .titleblock div{padding:8px 12px; border-right:1px solid var(--rule); border-top:1px solid var(--rule)}
+  .titleblock div:nth-child(-n+4){border-top:0}
+  .titleblock div:nth-child(4n){border-right:0}
+  .tb-l{display:block; font-size:9.5px; letter-spacing:.14em; color:var(--ink-soft); text-transform:uppercase}
+  .tb-v{display:block; color:var(--ink); margin-top:2px}
+  .tb-wide{grid-column:span 2}
+
+  /* ---------- signal path ---------- */
+  .flow{
+    display:flex; flex-wrap:wrap; align-items:stretch; gap:0; margin:30px 0 8px;
+    border:1px solid var(--rule); background:var(--panel); overflow:hidden;
+  }
+  .flow .stage{flex:1 1 0; min-width:150px; padding:14px 16px; border-right:1px solid var(--rule)}
+  .flow .stage:last-child{border-right:0}
+  .flow .st-n{font-family:var(--mono); font-size:10px; letter-spacing:.18em; color:var(--copper); text-transform:uppercase}
+  .flow .st-t{font-family:var(--disp); font-weight:600; font-size:15px; margin-top:5px}
+  .flow .st-d{font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.45}
+
+  /* ---------- sections ---------- */
+  section{padding-top:46px}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:4px}
+  .sec-num{font-family:var(--mono); font-size:13px; font-weight:700; color:var(--copper);
+    border:1px solid var(--copper); border-radius:2px; padding:1px 7px; flex:none}
+  h2{font-family:var(--disp); font-weight:600; font-size:25px; letter-spacing:-.01em; margin:0}
+  h3{font-family:var(--disp); font-weight:600; font-size:17px; margin:26px 0 8px; color:var(--steel)}
+  .rule{height:1px; background:var(--rule); margin:14px 0 18px}
+  p{margin:0 0 14px}
+  a{color:var(--copper-deep); text-decoration:none; border-bottom:1px solid var(--rule)}
+  strong{font-weight:600}
+  code,.m{font-family:var(--mono); font-size:.875em; background:var(--mono-bg);
+    padding:1px 5px; border-radius:3px; color:var(--ink); white-space:nowrap}
+  ul,ol{margin:0 0 14px; padding-left:22px}
+  li{margin:6px 0}
+
+  /* tables */
+  table{width:100%; border-collapse:collapse; margin:6px 0 18px; font-size:14px}
+  th,td{text-align:left; padding:9px 11px; border-bottom:1px solid var(--rule-soft); vertical-align:top}
+  thead th{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-soft); border-bottom:1px solid var(--ink); font-weight:500}
+  tbody tr:last-child td{border-bottom:1px solid var(--rule)}
+  td:first-child{font-family:var(--mono); font-size:12.5px; color:var(--steel); white-space:nowrap}
+  table.spec td:first-child{white-space:normal; font-family:var(--sans); color:var(--ink); font-weight:500}
+  table.spec td:last-child{font-family:var(--mono); font-size:12.5px}
+
+  /* callouts */
+  .note{border:1px solid var(--rule); border-left:3px solid var(--steel);
+    background:var(--panel); padding:14px 16px; border-radius:0 4px 4px 0; margin:0 0 16px; font-size:14.5px}
+  .note.ok{border-left-color:var(--ok); background:var(--ok-bg)}
+  .note.warn{border-left-color:var(--warn); background:var(--warn-bg)}
+  .chip{display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:.12em;
+    text-transform:uppercase; padding:2px 8px; border-radius:999px; font-weight:700; vertical-align:middle}
+  .chip.ok{background:var(--ok); color:#fff}
+  .chip.act{background:var(--warn); color:#fff}
+
+  pre.code{font-family:var(--mono); font-size:12.5px; line-height:1.6; background:var(--mono-bg);
+    border:1px solid var(--rule); border-radius:5px; padding:14px 16px; overflow-x:auto; margin:0 0 16px; color:var(--ink)}
+
+  footer{margin-top:60px; padding-top:18px; border-top:1px solid var(--ink);
+    font-family:var(--mono); font-size:11px; color:var(--ink-soft); letter-spacing:.04em;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px}
+
+  @media (max-width:680px){
+    .params{grid-template-columns:repeat(2,1fr)}
+    .params .p{border-bottom:1px solid var(--rule)}
+    .titleblock{grid-template-columns:1fr 1fr}
+    .titleblock .tb-wide{grid-column:span 2}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .reveal{opacity:0; transform:translateY(10px); animation:rise .6s ease forwards}
+    @keyframes rise{to{opacity:1; transform:none}}
+  }
+  @media print{
+    body{font-size:11pt} .doc{max-width:none; padding:0}
+    .flow,.params,.titleblock,.note,pre.code,table{break-inside:avoid}
+    section{break-inside:auto} .reveal{opacity:1; transform:none; animation:none}
+    a{color:var(--ink); border:0}
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <header class="hero reveal">
+    <div class="kicker">Design Notes · Rev 1 · 2026-06-28</div>
+    <h1 class="title">3V3-Regulator</h1>
+    <p class="subtitle">Automotive-grade <b>9 V–15 V → 3.3 V / 500 mA</b> power supply. Synchronous buck with a fully protected input and a smart-fuse output stage. KiCad 10 · 2-layer PCB.</p>
+
+    <div class="params">
+      <div class="p"><div class="pl">V&#8203;in</div><div class="pv">9–15 <small>V</small></div></div>
+      <div class="p"><div class="pl">V&#8203;out</div><div class="pv">3.315 <small>V</small></div></div>
+      <div class="p"><div class="pl">I&#8203;out</div><div class="pv">500 <small>mA</small></div></div>
+      <div class="p"><div class="pl">Efficiency</div><div class="pv">≈86 <small>%</small></div></div>
+      <div class="p"><div class="pl">Ripple</div><div class="pv">&lt;20 <small>mV</small></div></div>
+    </div>
+
+    <div class="titleblock">
+      <div class="tb-wide"><span class="tb-l">Title</span><span class="tb-v">3V3-REGULATOR — Design Notes</span></div>
+      <div><span class="tb-l">Size</span><span class="tb-v">A4</span></div>
+      <div><span class="tb-l">Rev</span><span class="tb-v">1</span></div>
+      <div class="tb-wide"><span class="tb-l">Author</span><span class="tb-v">Icaro · github.com/icarofcb</span></div>
+      <div><span class="tb-l">Tool</span><span class="tb-v">KiCad 10.0.4</span></div>
+      <div><span class="tb-l">Id</span><span class="tb-v">1/1</span></div>
+    </div>
+  </header>
+
+  <!-- 1 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Overview</h2></div>
+    <div class="rule"></div>
+    <p>This board converts an unregulated automotive DC bus (9 V–15 V) into a clean, regulated <strong>3.3 V rail at up to 500 mA</strong>, with the input, the converter, and the load protected end to end. The signal path is:</p>
+    <div class="flow">
+      <div class="stage"><div class="st-n">In</div><div class="st-t">Protected Input</div><div class="st-d">Fuse + ferrite + flat-clamp TVS + bulk caps</div></div>
+      <div class="stage"><div class="st-n">Convert</div><div class="st-t">Synchronous Buck</div><div class="st-d">LMR33630BDDA @ 1.4 MHz</div></div>
+      <div class="stage"><div class="st-n">Protect</div><div class="st-t">Smart Fuse</div><div class="st-d">TPS25200 eFuse · limit + OV clamp + fault flag</div></div>
+      <div class="stage"><div class="st-n">Out</div><div class="st-t">3.3 V Output</div><div class="st-d">Protected rail to J9</div></div>
+    </div>
+    <p>Visual diagnostics (power-good and fault LEDs) and four mounting holes are provided for integration and bring-up.</p>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Electrical Specifications</h2></div>
+    <div class="rule"></div>
+    <table class="spec">
+      <thead><tr><th>Parameter</th><th>Specification</th><th>As-designed</th></tr></thead>
+      <tbody>
+        <tr><td>Input voltage</td><td>9 V – 15 V DC</td><td>9–15 V (LMR33630: 3.8–36 V)</td></tr>
+        <tr><td>Output voltage</td><td>3.3 V DC</td><td>3.315 V (FB 100 k / 43.2 k)</td></tr>
+        <tr><td>Output current</td><td>500 mA max</td><td>eFuse limit ≈ 1.43 A typ</td></tr>
+        <tr><td>Output power</td><td>1.65 W</td><td>1.65 W</td></tr>
+        <tr><td>Topology</td><td>Candidate's choice</td><td>Synchronous buck (§3)</td></tr>
+        <tr><td>Switching frequency</td><td>—</td><td>1.4 MHz (LMR33630BDDA)</td></tr>
+        <tr><td>Estimated efficiency</td><td>State</td><td>≈ 86–88 % @ 12 V, 0.5 A</td></tr>
+        <tr><td>Target ripple</td><td>State</td><td>&lt; 20 mV pk-pk (est. ~5 mV)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Topology Selection &amp; Justification</h2></div>
+    <div class="rule"></div>
+    <p><strong>Chosen: synchronous step-down (buck) converter.</strong></p>
+    <p>A linear regulator was rejected on thermal grounds. Dropping 12 V → 3.3 V at 0.5 A in a linear pass element dissipates <code>(12 − 3.3) × 0.5 = 4.35 W</code>, and at the 15 V corner <code>(15 − 3.3) × 0.5 = 5.85 W</code> — an efficiency of only 22–28 % and several watts to remove from a small 2-layer board with no dedicated copper plane. Not viable.</p>
+    <p>A synchronous buck reaches ~85–90 % at this operating point, dissipating only a few hundred mW. The <strong>LMR33630BDDA</strong> was selected because it:</p>
+    <ul>
+      <li>Covers the full input range with wide margin (3.8–36 V vs. 9–15 V), tolerating load-dump ride-through above 15 V.</li>
+      <li>Integrates both MOSFETs (synchronous), removing the external catch diode and its loss.</li>
+      <li>Switches at <strong>1.4 MHz</strong>, shrinking the inductor (2.2 µH) and output caps and placing the fundamental above the AM band for easier conducted-EMI compliance.</li>
+      <li>Is an "ultra-low EMI" SIMPLE SWITCHER in an SO PowerPAD package with low parasitic loop inductance.</li>
+      <li>Uses an internally compensated, peak-current-mode loop — minimal external parts, robust across line/load.</li>
+    </ul>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Functional Block Description</h2></div>
+    <div class="rule"></div>
+
+    <h3>4.1 — Protected Input Stage</h3>
+    <table>
+      <thead><tr><th>Ref</th><th>Part</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>F1</td><td>SF-1206HHA1000R-2</td><td>Board input fuse — hard-fault / short protection. Schematic note: replaceable by an automotive blade fuse.</td></tr>
+        <tr><td>L1</td><td>Ferrite 26 Ω @ 100 MHz, 10 A</td><td>Series element of the input EMI filter (conducted emissions / di-dt damping).</td></tr>
+        <tr><td>IC1</td><td>TVS1800DRVR</td><td>Flat-clamp surge protection (load-dump / ISO 7637-style transients), 18 V standoff.</td></tr>
+        <tr><td>C1</td><td>47 µF</td><td>Bulk input hold-up.</td></tr>
+        <tr><td>C2, C21</td><td>10 µF 50 V</td><td>Buck input decoupling (HF hot-loop caps).</td></tr>
+        <tr><td>C3, C4, C22, C24</td><td>0.1 µF</td><td>Local HF bypass.</td></tr>
+        <tr><td>C29</td><td>1 µF</td><td>Protected-rail decoupling.</td></tr>
+      </tbody>
+    </table>
+    <p>The fuse, ferrite, and bulk/HF caps form a <strong>pi (C–L–C) input filter</strong>: the ferrite blocks the switcher's di/dt from the harness while the caps supply the pulsed input current locally. The TVS1800 shunts surge energy and clamps flat, with an 18 V standoff that sits comfortably above the 15 V input corner.</p>
+
+    <h3>4.2 — Buck Regulator</h3>
+    <table>
+      <thead><tr><th>Ref</th><th>Part</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>U2</td><td>LMR33630BDDA</td><td>1.4 MHz synchronous buck, 3.8–36 V in, 3 A.</td></tr>
+        <tr><td>L4</td><td>2.2 µH</td><td>Power inductor.</td></tr>
+        <tr><td>R8 / R9</td><td>100 k / 43.2 k</td><td>Feedback divider → V&#8203;out = 1.0 V × (1 + 100/43.2) = 3.315 V.</td></tr>
+        <tr><td>C30</td><td>0.1 µF</td><td>Bootstrap (BOOT–SW).</td></tr>
+        <tr><td>C5 / C7</td><td>1 µF</td><td>VCC / local decoupling.</td></tr>
+        <tr><td>C34/35/37/38/42</td><td>10 µF 50 V</td><td>Output capacitor bank (3.3 V rail).</td></tr>
+      </tbody>
+    </table>
+    <p>The 1.0 V internal reference and the 100 k / 43.2 k divider set 3.315 V (+0.5 %, within tolerance). The output bank is deliberately conservative for low ripple and good transient response; effective capacitance after DC-bias derating is well below the 50 µF nominal but still ample for this load.</p>
+
+    <h3>4.3 — Output Smart Fuse (eFuse)</h3>
+    <table>
+      <thead><tr><th>Ref</th><th>Part</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>IC2</td><td>TPS25200DRVR</td><td>eFuse: adjustable current limit, OV clamp, OVLO, thermal, reverse blocking, fault flag.</td></tr>
+        <tr><td>R11</td><td>68 k</td><td>R&#8203;ILIM → current-limit threshold.</td></tr>
+        <tr><td>D8, D9 (blue)</td><td>Power-good</td><td>Lit on healthy 3.3 V.</td></tr>
+        <tr><td>D10 (red)</td><td>Fault</td><td>Driven by FAULT (open-drain).</td></tr>
+        <tr><td>R15/R17 220Ω · R16 1k</td><td>LED / pull-up</td><td>Indicator drive.</td></tr>
+        <tr><td>J9</td><td>282834-2</td><td>Protected 3.3 V output.</td></tr>
+      </tbody>
+    </table>
+    <p><code>R_ILIM = 68 kΩ</code> sets a current-limit threshold of <strong>≈ 1.43 A typ</strong> (≈ 1.30 A min / 1.55 A max over tolerance, from the datasheet I&#8203;OS equations). That sits comfortably above the 500 mA spec and even above a 1 A transient peak, while still cutting off hard on a downstream short. The TPS25200 also provides an output OV <strong>clamp at ~5.4 V</strong> and <strong>OVLO shutoff at 7.6 V V&#8203;in</strong>, so a failed buck high-side FET dumping the raw input onto the 3.3 V rail is disconnected from the load rather than passed through. The open-drain FAULT asserts on over-current, over-temperature, or over-voltage and drives the red LED — no microcontroller required.</p>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Efficiency Estimate</h2></div>
+    <div class="rule"></div>
+    <p>At 12 V → 3.3 V, 0.5 A, the LMR33630 (1.4 MHz variant) operates around <strong>87 %</strong> per its characteristic curves. The series eFuse adds <code>60 mΩ × 0.5 A = 30 mV</code> drop → <code>~0.9 %</code> loss. Net <strong>≈ 86 %</strong> at nominal.</p>
+    <table class="spec">
+      <thead><tr><th>V&#8203;in</th><th>Est. converter η</th><th>Net (incl. eFuse)</th></tr></thead>
+      <tbody>
+        <tr><td>9 V</td><td>~89 %</td><td>~88 %</td></tr>
+        <tr><td>12 V</td><td>~87 %</td><td>~86 %</td></tr>
+        <tr><td>15 V</td><td>~85 %</td><td>~84 %</td></tr>
+      </tbody>
+    </table>
+    <p>Total dissipation at the worst corner is on the order of a few hundred mW, spread across U2's PowerPAD and L4 — manageable on 2 layers with a stitched ground pour and a thermal-via array under the IC.</p>
+  </section>
+
+  <!-- 6 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Ripple Budget</h2></div>
+    <div class="rule"></div>
+    <p><strong>Inductor ripple current</strong> &nbsp;<code>ΔI_L = V_OUT·(V_IN−V_OUT) / (V_IN·L·f_sw)</code></p>
+    <ul>
+      <li>12 V: <code>3.3 × 8.7 / (12 × 2.2µ × 1.4M) ≈ 0.78 A</code> pk-pk</li>
+      <li>15 V (worst): <code>≈ 0.84 A</code> pk-pk</li>
+      <li>Peak inductor current at 0.5 A load: <code>0.5 + 0.42 ≈ 0.92 A</code> — far below L4 / U2 limits.</li>
+    </ul>
+    <p><strong>Output voltage ripple</strong> (ceramic bank, ESR negligible) &nbsp;<code>ΔV ≈ ΔI_L / (8·f_sw·C_OUT)</code></p>
+    <ul>
+      <li>With ~40 µF effective: <code>0.84 / (8 × 1.4M × 40µ) ≈ 2 mV</code> pk-pk.</li>
+    </ul>
+    <div class="note"><strong>Target: &lt; 20 mV pk-pk</strong>; estimated <strong>~5 mV</strong> including ESL/ESR margin. Input ripple is held down by C1/C2/C21 plus the L1 ferrite (pi filter).</div>
+  </section>
+
+  <!-- 7 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Automotive Best Practices</h2></div>
+    <div class="rule"></div>
+
+    <h3>Protection (layered)</h3>
+    <ol>
+      <li>Input hard-fault / short → F1 (replaceable by a blade fuse, coordinated with the vehicle supply).</li>
+      <li>Surge / load-dump transients → TVS1800 flat clamp (18 V standoff, clamps surge below ~25 V — well under the LMR33630 36 V abs-max and the 50 V cap rating).</li>
+      <li>Output over-current / short / OV / reverse → TPS25200 eFuse with auto-recovery and fault flag.</li>
+      <li>Visual go/no-go → power-good (blue) and fault (red) LEDs.</li>
+    </ol>
+
+    <h3>EMI / EMC</h3>
+    <ul>
+      <li>1.4 MHz fundamental keeps key harmonics out of the AM band.</li>
+      <li>Pi input filter (C–ferrite–C) attenuates conducted emissions on the harness.</li>
+      <li>Tight switching hot loop and small SW-node copper minimize radiated emissions.</li>
+      <li>TVS + bulk caps address surge immunity (IEC 61000-4-5 class) and EFT/ESD on the input.</li>
+      <li>Exposed gold perimeter ring bonds PCB ground to the aluminum enclosure (360° chassis bond), extending the shield to the case.</li>
+    </ul>
+
+    <h3>Power / Signal Integrity</h3>
+    <ul>
+      <li>Output cap bank close to the load connector for low rail impedance and good step-load response.</li>
+      <li>Feedback divider routed away from the SW node; FB tap taken at the point of regulation.</li>
+      <li>Unbroken bottom-layer ground plane as the reference and lowest-impedance return for every net.</li>
+    </ul>
+
+    <h3>DFM / DFT / DFA</h3>
+    <ul>
+      <li><strong>DFM:</strong> assembly-friendly 1206/0603 passives, standard footprints, thermal-via arrays under U2 and IC2, generous clearances for a 2-layer process.</li>
+      <li><strong>DFT:</strong> test points on V&#8203;in, 3.3 V, FAULT, and GND; FAULT net brought out; LEDs give instant powered diagnostics; output on a keyed connector for in-line current measurement.</li>
+      <li><strong>DFA:</strong> polarized 282834-2 connectors (no reverse mating), consistent passive orientation, four mounting holes (H1–H4) for fixturing and vibration robustness.</li>
+    </ul>
+  </section>
+
+  <!-- 8 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>2-Layer PCB Layout Strategy</h2></div>
+    <div class="rule"></div>
+    <p>The stackup is deliberately simple and EMC-driven: <strong>the top layer carries all signals and power; the bottom layer is an unbroken ground plane.</strong> On a 2-layer board this is the single biggest lever for EMC and integrity — every trace on top runs over continuous reference copper, so each signal's return current flows in the image directly beneath it, giving the smallest possible loop area and a clean, low-impedance return for every net.</p>
+    <ul>
+      <li><strong>Solid ground plane (bottom):</strong> the entire second layer is ground, with no splits or cutouts. Nothing signal or power is routed on the bottom, because any trace there would slot the plane and force return current to detour around it (loop area → radiated emissions and ground bounce).</li>
+      <li><strong>Input hot loop</strong> (C2/C21 → VIN → GND) kept physically tiny on top — it carries the highest di/dt — with its ground return dropped straight into the plane through vias at the cap pads.</li>
+      <li><strong>SW node</strong> copper minimized in area (radiator) but wide enough for current; inductor placed immediately at SW.</li>
+      <li><strong>Returns / stitching:</strong> a ground via at every ground pad ties each device to the plane with minimal inductance; vias along the high-current return path keep impedance low.</li>
+      <li><strong>Chassis-bond shield ring:</strong> an exposed (soldermask-free), gold-finished (ENIG) ground ring runs around the board perimeter and is via-stitched to the bottom plane, bonding PCB ground to the aluminum enclosure around the full edge. Gold keeps the contact low-resistance and corrosion-free under compression and vibration (bare copper would oxidize into an unreliable joint). The 360° bond extends the Faraday shield onto the case — better radiated emissions and immunity — and gives a short chassis return for ESD/surge.</li>
+      <li><strong>Thermal:</strong> U2 PowerPAD and IC2 EP drop into the bottom ground copper through via arrays, using the full plane as the heat-spreader.</li>
+      <li><strong>Output caps</strong> hugging the inductor output and the eFuse input; protected-rail caps near J9.</li>
+      <li><strong>Sensitive nets</strong> (FB, ILIM) kept short over solid ground, away from SW and the inductor field.</li>
+      <li><strong>Input protection</strong> (F1, L1, TVS1800) at the connector edge so transient energy is shunted before it propagates onto the board.</li>
+    </ul>
+  </section>
+
+  <!-- 9 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Component Selection Notes</h2></div>
+    <div class="rule"></div>
+    <ul>
+      <li><strong>Decoupling / bulk MLCCs:</strong> Murata <strong>GCM</strong> series (AEC-Q200, X7R, −55…+125 °C). For positions in 0805 and larger, or anywhere board flex/vibration is a concern, the <strong>GCJ</strong> soft-termination equivalents are the preferred upgrade — a conductive-polymer layer that absorbs board-bending stress and prevents flex cracks.</li>
+      <li><strong>10 µF / 50 V / 1206:</strong> only available as <strong>X7T</strong> at this size/voltage (e.g. GCM31CD71H106KE36L) — note the wider temperature/DC-bias characteristic vs. X7R and the heavy DC-bias derating on the 9–15 V input cap (C2).</li>
+      <li><strong>Voltage derating:</strong> 50 V ceramics on a 3.3 V rail and on the 12 V bus keep stress well inside ECSS/IPC-style derating; the 1 µF/0603 parts are 25 V (fine on 3.3 V/5 V nodes — re-evaluate if any sits on the raw 9–15 V bus).</li>
+      <li><strong>eFuse R&#8203;ILIM = 68 kΩ</strong> verified against the TPS25200 datasheet I&#8203;OS equations (not just the table): min ≈ 1.30 A stays clear of the load; max ≈ 1.55 A gives a defined cut-off.</li>
+    </ul>
+  </section>
+
+  <!-- 10 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">10</span><h2>Submitted Files</h2></div>
+    <div class="rule"></div>
+    <table>
+      <thead><tr><th>File</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>3v3-regulator.kicad_pro</td><td>KiCad project</td></tr>
+        <tr><td>3v3-regulator.kicad_sch</td><td>Schematic</td></tr>
+        <tr><td>3v3-regulator.kicad_pcb</td><td>2-layer PCB layout</td></tr>
+        <tr><td>Design Notes</td><td>This document</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <span>3V3-REGULATOR · Rev 1 · 2026-06-28</span>
+    <span>Icaro · github.com/icarofcb</span>
+  </footer>
+
+</div>
+</body>
+</html>

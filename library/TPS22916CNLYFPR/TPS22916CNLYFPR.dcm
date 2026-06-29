@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP TPS22916CNLYFPR
+D Power Switch ICs - Power Distribution 5.5-V, 2-A, 60-mO, 10-nA leakage load switch with output discharge
+K
+F https://www.ti.com/lit/ds/symlink/tps22916.pdf?HQS=dis-mous-null-mousermode-dsf-pf-null-wwe&ts=1683764318252&ref_url=https%253A%252F%252Fwww.mouser.ph%252F
+$ENDCMP
+#
+#End Doc Library

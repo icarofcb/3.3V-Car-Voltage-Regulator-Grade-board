@@ -1,0 +1,6 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "AQ1250-01ETG") (type "KiCad") (uri "${KIPRJMOD}/library/AQ1250-01ETG/AQ1250-01ETG.kicad_sym") (options "") (descr ""))
+	(lib (name "MAX5035BASA_V+") (type "KiCad") (uri "${KIPRJMOD}/library/MAX5035BASA_V+/KiCad/MAX5035BASA_V+.kicad_sym") (options "") (descr ""))
+	(lib (name "TPS25200DRVR") (type "KiCad") (uri "${KIPRJMOD}/library/TPS25200DRVR/TPS25200DRVR.kicad_sym") (options "") (descr ""))
+)
