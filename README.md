@@ -189,3 +189,7 @@ The stackup is deliberately simple and EMC-driven: **the top layer carries all s
 | `3v3-regulator.kicad_sch` | Schematic |
 | `3v3-regulator.kicad_pcb` | 2-layer PCB layout |
 | `README` / Design Notes | This document |
+
+## 11. Extra Files
+
+The `manufacture files` directory holds the full output set: design notes, fabrication/manufacturing files, and the schematic export. Gerbers and the schematic source are also available in the `gerber/` and `Schematic/` directories.
